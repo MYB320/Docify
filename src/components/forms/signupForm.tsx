@@ -17,9 +17,11 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { signupUser } from "@/lib/api";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Spinner } from "@/components/ui/spinner";
 import { parseAuthError, shouldShowToast } from "@/lib/auth-errors";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, Zap, Layers, CheckCircle2 } from "lucide-react";
 
 const formSchema = z
   .object({
@@ -50,6 +52,10 @@ export function SignupForm({
   ...props
 }: React.ComponentProps<"form">) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedPlan = searchParams.get("plan") || "free";
+  const billingFrequency = searchParams.get("billing") || "annual";
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -68,6 +74,32 @@ export function SignupForm({
     clearErrors,
     reset,
   } = form;
+
+  const planDetails = {
+    free: {
+      name: "Free Plan",
+      price: "$0 / forever",
+      icon: <Layers className="h-4 w-4 text-muted-foreground" />,
+      badge: "Standard",
+    },
+    plus: {
+      name: "Plus Plan",
+      price: billingFrequency === "annual" ? "$6 / month (Annual)" : "$8 / month",
+      icon: <Sparkles className="h-4 w-4 text-primary" />,
+      badge: "Most Popular",
+    },
+    pro: {
+      name: "Pro Plan",
+      price: billingFrequency === "annual" ? "$16 / month (Annual)" : "$20 / month",
+      icon: <Zap className="h-4 w-4 text-amber-500" />,
+      badge: "Power Users",
+    },
+  }[selectedPlan.toLowerCase() as "free" | "plus" | "pro"] || {
+    name: "Free Plan",
+    price: "$0 / forever",
+    icon: <Layers className="h-4 w-4 text-muted-foreground" />,
+    badge: "Standard",
+  };
 
   const signupMutation = useMutation({
     mutationFn: signupUser,
@@ -92,10 +124,9 @@ export function SignupForm({
           toast.error(authError.message);
         }
       } else {
-        toast.success("Account created successfully! Welcome to Docify!");
-        // Reset form
+        const planName = planDetails.name;
+        toast.success(`Account created with ${planName}! Welcome to Docify!`);
         reset();
-        // Small delay before redirect for better UX
         setTimeout(() => {
           router.push("/documents");
         }, 1000);
@@ -108,9 +139,7 @@ export function SignupForm({
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Clear any previous errors
     clearErrors();
-
     signupMutation.mutate({
       name: values.name,
       email: values.email,
@@ -128,8 +157,37 @@ export function SignupForm({
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-bold">Create your account</h1>
           <p className="text-muted-foreground text-sm text-balance">
-            Fill in the form below to create your account
+            Fill in the form below to get started with Docify
           </p>
+        </div>
+
+        {/* Selected Plan Banner */}
+        <div className="p-3.5 rounded-xl border border-primary/30 bg-primary/5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 rounded-lg bg-background border shadow-2xs">
+              {planDetails.icon}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-semibold text-xs text-foreground truncate">
+                  {planDetails.name}
+                </span>
+                <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-normal">
+                  {planDetails.badge}
+                </Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {planDetails.price}
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/#pricing"
+            className="text-[11px] font-medium text-primary hover:underline shrink-0"
+          >
+            Change
+          </Link>
         </div>
 
         <Field data-invalid={!!errors.name}>
@@ -191,7 +249,7 @@ export function SignupForm({
             {signupMutation.isPending && <Spinner className="mr-2 h-4 w-4" />}
             {signupMutation.isPending
               ? "Creating Account..."
-              : "Create Account"}
+              : `Create Account (${planDetails.name})`}
           </Button>
         </Field>
 

@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { Hero } from "@/components/landingPage/hero";
 import { Stats } from "@/components/landingPage/states";
 import { Features } from "@/components/landingPage/features";
+import { Pricing } from "@/components/landingPage/pricing";
 import { CTA } from "@/components/landingPage/cta";
 
 export default async function Home() {
@@ -31,13 +32,13 @@ export default async function Home() {
             Pricing
           </a>
           <a
-            href="#docs"
+            href="/billing"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            Docs
+            Billing
           </a>
         </nav>
-        <div className="flex gap-4 ">
+        <div className="flex gap-4">
           <ThemeToggle />
           <AuthHeader />
         </div>
@@ -46,6 +47,7 @@ export default async function Home() {
         <Hero />
         <Stats />
         <Features />
+        <Pricing />
         <CTA />
       </main>
     </div>

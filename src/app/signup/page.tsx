@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
 import { TextRoll } from "@/components/ui/text-roll";
 import { SignupForm } from "@/components/forms/signupForm";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function SignupPage() {
   return (
@@ -15,7 +17,15 @@ export default function SignupPage() {
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-md">
-            <SignupForm />
+            <Suspense
+              fallback={
+                <div className="flex justify-center p-8">
+                  <Spinner className="h-6 w-6" />
+                </div>
+              }
+            >
+              <SignupForm />
+            </Suspense>
           </div>
         </div>
       </div>
